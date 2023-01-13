@@ -1,0 +1,19 @@
+{
+  "name": "asls_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "DMXWebRTC": "./index.js"
+  },
+  "author": "Timé Kadel",
+  "license": "ISC",
+  "dependencies": {
+    "wrtc": "^0.4.7",
+    "ws": "^8.11.0",
+    "yargs": "^17.5.1"
+  }
+}
