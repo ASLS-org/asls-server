@@ -6,7 +6,7 @@ const Dgram = require("dgram");
 const {
   networkInterfaces
 } = require("os");
-const WebRTC = require("wrtc");
+const WebRTC = require("@cubicleai/wrtc");
 
 /**
  * Dgram socket options
@@ -27,8 +27,9 @@ const UDP_OPT = {
  */
 const WS_MSG_TYPES = {
   WebRTC_OFFER: "__WRTC_OFR",
-  OUTPUTS_LIST: "__OUTPUTS_LIST",
-  OUTPUTS_SET: "__OUTPUTS__SET"
+  WebRTC_ANSWER: "__WRTC_ANS",
+  WebRTC_STATE: "__WRTC_STA",
+  WebRTC_END: "__WRTC_END",
 }
 
 /**
@@ -399,10 +400,12 @@ under certain conditions;\n\n`)
     this.wss = new Ws.Server({
       port: wsPort
     })
+    this.ws = null;
     this.artnetSocket = Dgram.createSocket(UDP_OPT);
     this.artnetSocket.bind(udpPort, undefined, () => {
       this.artnetSocket.setBroadcast(true)
     });
+    this.prepareWebRTCPeer();
     this.prepareWSListeners();
   }
 
@@ -414,55 +417,28 @@ under certain conditions;\n\n`)
    */
   prepareWSListeners() {
     this.wss.on('connection', (ws) => {
+      this.ws = ws;
       ws.on("message", async (jsonMsg) => {
         let msg = JSON.parse(jsonMsg);
         switch (msg.type) {
           case WS_MSG_TYPES.WebRTC_OFFER:
             console.log(`Websocket offer from: ${ws._socket.remoteAddress}`);
-            let localDescriptor = await this.bindWRTCDatachannel(msg.data);
             ws.send(JSON.stringify({
               type: WS_MSG_TYPES.WebRTC_OFFER,
-              data: localDescriptor
+              data: this.peer.localDescription
             }));
             break;
-          case WS_MSG_TYPES.OUTPUTS_LIST:
-            ws.send(JSON.stringify({
-              type: WS_MSG_TYPES.OUTPUTS_LIST,
-              data: this.getOutputsData()
-            }));
-            break;
-          case WS_MSG_TYPES.OUTPUTS_SET:
-            this.outputs = msg.data.map(output => {
-              return Object.assign(output, {
-                broadcast: DMXWebRTC._getBroadcast(output.address, output.mask)
-              })
-            })
+          case WS_MSG_TYPES.WebRTC_ANSWER:
+            this.bindWRTCDatachannel(msg.data)
             break;
         }
       })
     })
   }
 
-  /**
-   * Fetches available network interfaces
-   * 
-   * @method getOutputsData
-   * @public
-   * @returns {Array<Object>} an array containing network interface definitions
-   */
-  getOutputsData() {
-    let outputsRaw = networkInterfaces();
-    return Object.keys(outputsRaw).map(outputName => {
-      let output = outputsRaw[outputName]
-      return output.flatMap(i => {
-        return i.family == "IPv4" ? {
-          name: outputName,
-          cidr: i.cidr,
-          address: i.address,
-          mask: i.netmask
-        } : []
-      })
-    }).flat()
+  prepareWebRTCPeer(){
+    this.peer = new WebRTC.RTCPeerConnection();
+    this.peer.ondatachannel = this.dataChannelHandler.bind(this);
   }
 
   /**
@@ -473,14 +449,15 @@ under certain conditions;\n\n`)
    * @param {String} sdp WebRTC Session Description Protocol
    */
   async bindWRTCDatachannel(sdp) {
-    console.log(`Creating per connection`);
-    const peer = new WebRTC.RTCPeerConnection();
-    peer.ondatachannel = this.dataChannelHandler.bind(this);
-    await peer.setRemoteDescription(new WebRTC.RTCSessionDescription(sdp));
+    await this.peer.setRemoteDescription(new WebRTC.RTCSessionDescription({ type: 'offer', sdp }));
     console.log(`Preparing answer`);
-    await peer.setLocalDescription(await peer.createAnswer());
+    await this.peer.setLocalDescription(await this.peer.createAnswer());
     console.log(`Waiting fo data channel..\n`);
-    return peer.localDescription;
+    this.peer.localDescription;
+    this.ws.send(JSON.stringify({
+      type: WS_MSG_TYPES.WebRTC_ANSWER,
+      data: this.peer.localDescription.sdp,
+    }));
   }
 
   /**
@@ -519,13 +496,9 @@ under certain conditions;\n\n`)
   forwardDMXData({
     data
   }) {
-    data = JSON.parse(data);
-    let artnetPacket = new ArtDmxPacket(data.universe, data.DMX512Buffer);
-    if (this.outputs.length) {
-      this.outputs.forEach(o => {
-        this.artnetSocket.send(artnetPacket.buffer, 0, artnetPacket.buffer.length, this.udpPort, o.broadcast)
-      })
-    }
+    let artnetPacket = new ArtDmxPacket(0, data);
+    console.log(artnetPacket)
+    this.artnetSocket.send(artnetPacket.buffer, 0, artnetPacket.buffer.length, this.udpPort, '127.0.0.1')
   }
 
   /**
