@@ -1,6 +1,6 @@
-# ASLS Server
+# ASLS WSC Server
 
-ASLS Server is a Node.js application that bridges Web Show Control (WSC) DMX packets to various lighting protocols, with current support for Art-Net. It enables seamless communication between web-based lighting control interfaces and traditional DMX lighting systems.
+ASLS WSC Server is a Node.js application that bridges Web Show Control (WSC) DMX packets to various lighting protocols, with current support for Art-Net. It enables seamless communication between web-based lighting control interfaces and traditional DMX lighting systems.
 
 ```
       ___           ___           ___       ___      
@@ -16,13 +16,15 @@ ASLS Server is a Node.js application that bridges Web Show Control (WSC) DMX pac
      \__\/         \__\/         \__\/     \__\/     
 ```
 
-- [ASLS Server](#asls-server)
+- [ASLS WSC Server](#asls-wsc-server)
   - [Features](#features)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
   - [Configuration](#configuration)
   - [Usage](#usage)
-    - [Basic Setup](#basic-setup)
+    - [Command Line Interface](#command-line-interface)
+      - [CLI Options](#cli-options)
+    - [Programmatic Usage](#programmatic-usage)
     - [Data Flow](#data-flow)
   - [Protocol Support](#protocol-support)
     - [Current Implementation](#current-implementation)
@@ -69,7 +71,41 @@ These values can be modified when initializing the server.
 
 ## Usage
 
-### Basic Setup
+### Command Line Interface
+
+The server can be started using the CLI with optional port configurations:
+
+```bash
+# Start with default ports
+DMXWebRTC
+
+# Configure WebSocket port
+DMXWebRTC -w 5215
+
+# Configure UDP port
+DMXWebRTC -u 6455
+
+# Configure both ports
+DMXWebRTC -w 5215 -u 6455
+
+# Show help
+DMXWebRTC --help
+```
+
+#### CLI Options
+
+```
+Usage: DMXWebRTC -w <web_socket_port> -u <udp_port>
+
+Options:
+  -w, --websocket-port  Sets up port number of the web socket server instance
+                        used for signaling
+  -u, --udp-port        Port number of the ArtNET server from which data will
+                        be intercepted and/or forwarded through WebRTC
+  --help                Show help information
+```
+
+### Programmatic Usage
 
 ```javascript
 const DMXWebRTC = require('./DMXWebRTC');
