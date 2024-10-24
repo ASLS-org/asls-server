@@ -1,7 +1,7 @@
 {
-  "name": "asls_server",
+  "name": "asls-wsc-server",
   "version": "1.0.0",
-  "description": "",
+  "description": "ASLS's implementation of a WSC (Web Show Control) server",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -11,8 +11,41 @@
   "license": "ISC",
   "dependencies": {
     "@cubicleai/wrtc": "^0.7.0",
+    "@semantic-release/npm": "^12.0.1",
     "rxjs": "^7.8.1",
+    "semantic-release": "^24.1.3",
     "ws": "^8.11.0",
     "yargs": "^17.5.1"
+  },
+  "release": {
+    "branches": [
+      "master",
+      {
+        "name": "staging",
+        "prerelease": "rc"
+      }
+    ],
+    "dryRun": false,
+    "ci": true,
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/github",
+        {
+          "successComment": false,
+          "failComment": false,
+          "failTitle": false,
+          "labels": false,
+          "releasedLabels": false
+        }
+      ],
+      [
+        "@semantic-release/npm",
+        {
+          "npmPublish": true
+        }
+      ]
+    ]
   }
 }
