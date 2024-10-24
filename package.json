@@ -8,7 +8,7 @@
     "start": "node index.js"
   },
   "bin": {
-    "DMXWebRTC": "./index.js"
+    "DMXWebRTC": "bin/index.js"
   },
   "author": "Timé Kadel",
   "license": "ISC",

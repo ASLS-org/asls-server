@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 const yargs = require("yargs");
-const DMXWebRTC = require("../DMXWebRTC.js");
+const DMXWebRTC = require("./DMXWebRTC.js");
 
 const DEFAULT_WS_PORT = 5214;
 const DEFAULT_UDP_PORT = 6454;
