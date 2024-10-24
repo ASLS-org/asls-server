@@ -7,9 +7,6 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js"
   },
-  "bin": {
-    "DMXWebRTC": "bin/index.js"
-  },
   "author": "Timé Kadel",
   "license": "ISC",
   "dependencies": {
