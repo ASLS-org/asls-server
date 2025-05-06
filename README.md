@@ -52,7 +52,7 @@ ASLS WSC Server is a Node.js application that bridges Web Show Control (WSC) DMX
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/asls-server.git
+git clone https://github.com/ASLS-org/asls-server
 cd asls-server
 ```
 
